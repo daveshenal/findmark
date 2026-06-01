@@ -2,7 +2,7 @@
 
 > Find any bookmark by describing it in plain English - powered by local AI, right in your browser.
 
-Type *"that CSS grid tutorial I saved"* or *"the article about React performance"* and it finds the right bookmark - no exact keywords needed.
+Type _"that CSS grid tutorial I saved"_ or _"the article about React performance"_ and it finds the right bookmark - no exact keywords needed.
 
 ---
 
@@ -34,24 +34,24 @@ Type *"that CSS grid tutorial I saved"* or *"the article about React performance
 
 ## 🧠 How It Works
 
-| Step | What happens |
-|------|-------------|
-| **1. Model load** | `all-MiniLM-L6-v2` loads via `transformers.js` (runs in browser) |
-| **2. Indexing** | Every bookmark's title + URL gets converted to a vector embedding |
-| **3. Caching** | Embeddings are stored in `chrome.storage.local` - never re-computed unless you re-index |
-| **4. Search** | Your query is embedded and compared to all bookmarks via cosine similarity |
-| **5. Rank** | Top matches returned, ranked by semantic closeness |
+| Step              | What happens                                                                            |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| **1. Model load** | `all-MiniLM-L6-v2` loads via `transformers.js` (runs in browser)                        |
+| **2. Indexing**   | Every bookmark's title + URL gets converted to a vector embedding                       |
+| **3. Caching**    | Embeddings are stored in `chrome.storage.local` - never re-computed unless you re-index |
+| **4. Search**     | Your query is embedded and compared to all bookmarks via cosine similarity              |
+| **5. Rank**       | Top matches returned, ranked by semantic closeness                                      |
 
 ---
 
 ## 🎮 Usage
 
-| Action | How |
-|--------|-----|
-| Search | Type naturally in the search box |
-| Open bookmark | Click any result |
-| Clear search | Click ✕ or clear the input |
-| Re-index | Click **re-index** in the footer (use after adding many bookmarks) |
+| Action        | How                                                                |
+| ------------- | ------------------------------------------------------------------ |
+| Search        | Type naturally in the search box                                   |
+| Open bookmark | Click any result                                                   |
+| Clear search  | Click ✕ or clear the input                                         |
+| Re-index      | Click **re-index** in the footer (use after adding many bookmarks) |
 
 ---
 

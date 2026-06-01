@@ -1,7 +1,7 @@
 // background.js — Service worker for Bookmark Semantic Search
 // Uses transformers.js (via CDN) to run all-MiniLM-L6-v2 locally in the browser.
 
-import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js';
+import { pipeline, env } from './lib/transformers.min.js';
 
 // Don't use local model files — fetch from CDN
 env.allowLocalModels = false;
@@ -43,17 +43,42 @@ function flattenBookmarks(nodes, results = []) {
 }
 
 // ── Storage helpers ───────────────────────────────────────────────────────────
+// Embeddings are quantized to int8 (4x smaller than float32) to stay well
+// within chrome.storage.local quota even for thousands of bookmarks.
+// 384-dim float32 = 1536 bytes/bookmark → int8 = 384 bytes/bookmark
+// 5000 bookmarks ≈ 1.9 MB quantized vs 7.5 MB raw
 
-const STORAGE_KEY = 'bookmark_index_v1';
+const STORAGE_KEY = 'bookmark_index_v2';
+
+function quantizeEmbedding(f32) {
+  // Scale to [-127, 127] int8
+  let max = 0;
+  for (let i = 0; i < f32.length; i++) {
+    const abs = Math.abs(f32[i]);
+    if (abs > max) max = abs;
+  }
+  const scale = max > 0 ? 127 / max : 1;
+  const i8 = new Int8Array(f32.length);
+  for (let i = 0; i < f32.length; i++) {
+    i8[i] = Math.round(f32[i] * scale);
+  }
+  return { i8: Array.from(i8), scale };
+}
+
+function dequantizeEmbedding({ i8, scale }) {
+  const f32 = new Float32Array(i8.length);
+  const invScale = 1 / scale;
+  for (let i = 0; i < i8.length; i++) {
+    f32[i] = i8[i] * invScale;
+  }
+  return f32;
+}
 
 async function saveIndex(bookmarks) {
-  // Store as plain arrays (Float32Array isn't JSON-serializable directly)
-  const serializable = bookmarks.map(b => ({
-    id: b.id,
-    title: b.title,
-    url: b.url,
-    embedding: Array.from(b.embedding),
-  }));
+  const serializable = bookmarks.map(b => {
+    const { i8, scale } = quantizeEmbedding(b.embedding);
+    return { id: b.id, title: b.title, url: b.url, i8, scale };
+  });
   await chrome.storage.local.set({ [STORAGE_KEY]: serializable });
 }
 
@@ -62,8 +87,10 @@ async function loadIndex() {
   const data = result[STORAGE_KEY];
   if (!data) return null;
   return data.map(b => ({
-    ...b,
-    embedding: new Float32Array(b.embedding),
+    id: b.id,
+    title: b.title,
+    url: b.url,
+    embedding: dequantizeEmbedding({ i8: b.i8, scale: b.scale }),
   }));
 }
 
@@ -71,7 +98,7 @@ async function clearIndex() {
   await chrome.storage.local.remove(STORAGE_KEY);
 }
 
-// ── Embed text ────────────────────────────────────────────────────────────────
+
 
 async function embed(text) {
   const output = await embedder(text, { pooling: 'mean', normalize: true });
@@ -103,11 +130,13 @@ async function initialize(forceReindex = false) {
     if (!forceReindex) {
       const cached = await loadIndex();
       if (cached && cached.length > 0) {
-        // Check if bookmarks have changed
         const tree = await chrome.bookmarks.getTree();
         const current = flattenBookmarks(tree);
-
-        if (current.length === cached.length) {
+        // Fingerprint over id+title+url — detects edits, renames, adds, deletes
+        // not just count changes
+        const fingerprint = (bms) =>
+          bms.map(b => `${b.id}:${b.title}:${b.url}`).sort().join('|');
+        if (fingerprint(current) === fingerprint(cached)) {
           indexedBookmarks = cached;
           bookmarkCount = cached.length;
           state = 'ready';

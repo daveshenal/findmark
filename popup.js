@@ -36,9 +36,20 @@ function hideProgress() {
 
 function showState(emoji, title, sub) {
   stateMessage.style.display = 'block';
-  stateMessage.innerHTML = `<span class="emoji">${emoji}</span><strong>${title}</strong>${sub}`;
-  resultsArea.innerHTML = '';
-  resultsArea.appendChild(stateMessage);
+
+  // Build DOM safely — no innerHTML with dynamic values
+  const emojiEl = document.createElement('span');
+  emojiEl.className = 'emoji';
+  emojiEl.textContent = emoji;
+
+  const titleEl = document.createElement('strong');
+  titleEl.textContent = title;
+
+  const subEl = document.createElement('span');
+  subEl.textContent = sub; // textContent, never innerHTML
+
+  stateMessage.replaceChildren(emojiEl, titleEl, subEl);
+  resultsArea.replaceChildren(stateMessage);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -148,7 +159,7 @@ function renderResults(results, query) {
   resultsArea.innerHTML = '';
 
   if (!results || results.length === 0) {
-    showState('🤷', 'No matches found', `Nothing close to "<em>${query}</em>" in your bookmarks.`);
+    showState('🤷', 'No matches found', `Nothing close to "${query}" in your bookmarks.`);
     return;
   }
 
