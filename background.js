@@ -1,4 +1,4 @@
-// background.js — Service worker for Bookmark Semantic Search
+// background.js - Service worker for Bookmark Semantic Search
 // Uses transformers.js (local bundle) to run all-MiniLM-L6-v2 in the browser.
 
 import { pipeline, env } from "./lib/transformers.min.js";
@@ -13,7 +13,7 @@ const DEBUG = false;
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
-// Disable all threading — service workers can't spawn Worker threads
+// Disable all threading - service workers can't spawn Worker threads
 env.backends.onnx.wasm.numThreads = 1;
 
 // Point ONNX runtime at our locally bundled WASM files (no CDN, no Workers)
@@ -210,17 +210,17 @@ async function initialize(forceReindex = false) {
             .sort()
             .join("|");
         if (fingerprint(current) === fingerprint(cached)) {
-          dbg("info", "Cache is fresh — skipping reindex");
+          dbg("info", "Cache is fresh - skipping reindex");
           indexedBookmarks = cached;
           bookmarkCount = cached.length;
           state = "ready";
           progress = 100;
           return;
         } else {
-          dbg("info", "Cache is stale — reindexing");
+          dbg("info", "Cache is stale - reindexing");
         }
       } else {
-        dbg("info", "No cached index found — indexing fresh");
+        dbg("info", "No cached index found - indexing fresh");
       }
     }
 
