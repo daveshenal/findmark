@@ -95,21 +95,19 @@ Service worker (background.js)
 
 ```
 findmark/
-├── manifest.json          # MV3 manifest (v1.0.1)
-├── background.js          # Model load, indexing, search, storage
-├── popup.html             # Popup UI
-├── popup.js               # Search UI, status polling, results
+├── manifest.json            # MV3 manifest (v1.0.0)
+├── background.js            # Model load, indexing, search, storage
+├── popup.html               # Popup UI
+├── popup.js                 # Search UI, status polling, results
 ├── lib/
-│   ├── transformers.min.js
-│   ├── ort-wasm.wasm
-│   └── ort-wasm-simd.wasm
+│   ├── transformers.min.js  # Xenova/transformers.js — in-browser ML inference
+│   ├── ort-wasm.wasm        # ONNX Runtime WASM (fallback)
+│   └── ort-wasm-simd.wasm   # ONNX Runtime WASM with SIMD (primary)
 ├── icons/
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
 ├── assets/
-│   └── demo.gif           # README demo
-├── LICENSE                # MIT
+│   ├── demo.gif             # README demo
+│   └── screenshots/
+├── LICENSE
 └── README.md
 ```
 
