@@ -151,10 +151,10 @@ Bookmarks themselves are not sent to those services - only the model fetch and t
 
 ## Tips and limits
 
-- Search quality depends on bookmark titles — a title like "Python decorator tutorial" will match better than "Untitled" or a bare URL.
+- Search quality depends on bookmark titles - a title like "Python decorator tutorial" will match better than "Untitled" or a bare URL.
 - English works best; other languages may work but are untested with this model.
 - First-time indexing gets slower with larger libraries, but the cache keeps it fast after that. Storage stays reasonable (~2 MB for thousands of bookmarks).
-- **Firefox is not supported** — Findmark uses Chromium-only APIs (`chrome.*`) and MV3 service worker features.
+- **Firefox is not supported** - Findmark uses Chromium-only APIs (`chrome.*`) and MV3 service worker features.
 
 ---
 
