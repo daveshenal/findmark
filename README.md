@@ -1,99 +1,152 @@
-# 🔖 Bookmark Semantic Search
+# Findmark
 
-> Find any bookmark by describing it in plain English - powered by local AI, right in your browser.
+**Find saved bookmarks by describing them—not by remembering the exact title.**
 
-Type _"that CSS grid tutorial I saved"_ or _"the article about React performance"_ and it finds the right bookmark - no exact keywords needed.
+If you have hundreds of bookmarks, you have probably been there: you know you saved something, but you cannot recall what it was called or which folder it is in. Findmark lets you search the way you would ask a friend—in your own words.
 
----
+**Try searching like this:**
 
-## ✨ Features
+- *the pasta recipe I saved last year*
+- *that article about getting better sleep*
+- *hotel we looked at for our trip*
+- *birthday gift ideas for mom*
+- *funny cat video someone sent me*
 
-- **Semantic search** - understands meaning, not just keywords
-- **100% local** - model runs in your browser, bookmarks never leave your device
-- **No API keys** - completely free, works offline after first load
-- **All browsers** (Chrome/Edge/Brave) - any Chromium-based browser
-- **Fast** - searches 1000s of bookmarks in milliseconds
-- **Auto-indexed** - picks up your bookmarks automatically
+You do not need the right keywords or the website name. Findmark looks for pages that *mean* the same thing as what you typed.
 
----
+**Works in:** Google Chrome, Microsoft Edge, Brave, and other Chromium-based browsers.
 
-## 🚀 Install
-
-### Chrome / Edge / Brave (Developer Mode)
-
-1. **Clone or download** this repo as a ZIP and unzip it
-2. Open your browser and go to `chrome://extensions`
-3. Enable **Developer mode** (top right toggle)
-4. Click **"Load unpacked"**
-5. Select the `bookmark-search-extension` folder
-6. Click the extension icon in your toolbar 🔖
-
-> **First launch:** The AI model (~23MB) downloads once and is cached. This takes 10–30 seconds depending on your connection. All future launches are instant.
+**Private by design:** Your bookmarks are read and searched on your computer. You do not sign up, pay, or send your bookmark list to a company to use Findmark. See [Privacy](#privacy) for the few optional internet requests (mostly a one-time setup download).
 
 ---
 
-## 🧠 How It Works
+## What you get
 
-| Step              | What happens                                                                            |
-| ----------------- | --------------------------------------------------------------------------------------- |
-| **1. Model load** | `all-MiniLM-L6-v2` loads via `transformers.js` (runs in browser)                        |
-| **2. Indexing**   | Every bookmark's title + URL gets converted to a vector embedding                       |
-| **3. Caching**    | Embeddings are stored in `chrome.storage.local` - never re-computed unless you re-index |
-| **4. Search**     | Your query is embedded and compared to all bookmarks via cosine similarity              |
-| **5. Rank**       | Top matches returned, ranked by semantic closeness                                      |
-
----
-
-## 🎮 Usage
-
-| Action        | How                                                                |
-| ------------- | ------------------------------------------------------------------ |
-| Search        | Type naturally in the search box                                   |
-| Open bookmark | Click any result                                                   |
-| Clear search  | Click ✕ or clear the input                                         |
-| Re-index      | Click **re-index** in the footer (use after adding many bookmarks) |
+- **Search in plain English** — describe the page, not the exact title
+- **Free** — no account, no subscription, no API keys
+- **Stays on your device** — built for local search, not a cloud bookmark service
+- **Remembers your library** — after the first setup, opening Findmark is quick
+- **Keeps up with changes** — new or edited bookmarks are picked up automatically; you can also tap **re-index** if you import a big batch at once
+- **Works offline** — after the first-time setup, search still works without internet
 
 ---
 
-## 📁 Project Structure
+## How to install
+
+1. **Get the extension files** — download this project as a ZIP from GitHub (green **Code** button → **Download ZIP**), then unzip it. You should end up with a folder named `findmark`.
+2. **Open extensions in your browser**
+   - Chrome or Brave: type `chrome://extensions` in the address bar and press Enter
+   - Edge: type `edge://extensions` and press Enter
+3. Turn on **Developer mode** (usually a switch in the top-right corner).
+4. Click **Load unpacked** and choose the `findmark` folder you unzipped.
+5. Pin **Findmark** to your toolbar (puzzle-piece icon → pin) so it is easy to open.
+
+**The first time you open it:** Findmark downloads a small AI helper file (about 23 MB) once, then saves it in your browser. That can take 10–30 seconds depending on your internet. It also reads through your bookmarks once to get ready. A progress bar in the popup shows what is happening. After that, startup is much faster.
+
+---
+
+## How to use
+
+| What you want | What to do |
+|---------------|------------|
+| Find a bookmark | Click the Findmark icon, type a short description, and read the list |
+| Open one | Click a result — it opens in a new tab |
+| Start over | Click **✕** next to the search box, or delete what you typed |
+| Refresh everything | Click **re-index** at the bottom after importing many bookmarks at once |
+
+Each result shows a **match %** — higher means Findmark thinks that bookmark is a better fit for what you described.
+
+---
+
+## For developers
+
+### How it works
+
+1. **Model** — On startup, the background service worker loads `Xenova/all-MiniLM-L6-v2` using a bundled ONNX Runtime WASM build (`lib/ort-wasm-simd.wasm`). Threading is disabled to stay compatible with MV3 service workers.
+2. **Index** — Each bookmark’s title and URL (up to 512 characters) is embedded in batches of 8. Vectors are L2-normalized mean-pooled outputs (384 dimensions).
+3. **Cache** — Embeddings are quantized to int8 and stored under `bookmark_index_v2`. A fingerprint of bookmark id, title, and URL skips rebuilds when nothing changed.
+4. **Search** — Your query is embedded the same way; cosine similarity ranks bookmarks and the top matches are returned to the popup.
 
 ```
-bookmark-search-extension/
-├── manifest.json       # Extension config (MV3)
-├── popup.html          # Search UI
-├── popup.js            # UI logic
-├── background.js       # Service worker - embeddings + search
+Popup (popup.html / popup.js)
+    │  INIT · STATUS · SEARCH · REINDEX
+    ▼
+Service worker (background.js)
+    ├── transformers.js + bundled WASM
+    ├── chrome.bookmarks API
+    └── chrome.storage.local (quantized index)
+```
+
+---
+
+### Project structure
+
+```
+findmark/
+├── manifest.json          # MV3 manifest (v1.0.1)
+├── background.js          # Model load, indexing, search, storage
+├── popup.html             # Popup UI
+├── popup.js               # Search UI, status polling, results
+├── style.css              # Popup styles
+├── lib/
+│   ├── transformers.min.js
+│   ├── ort-wasm.wasm
+│   └── ort-wasm-simd.wasm
 ├── icons/
 │   ├── icon16.png
 │   ├── icon48.png
 │   └── icon128.png
+├── LICENSE                # MIT
 └── README.md
 ```
 
 ---
 
-## 🛠 Tech Stack
+### Tech stack
 
-- **[transformers.js](https://github.com/xenova/transformers.js)** - runs HuggingFace models in the browser via WebAssembly
-- **[all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)** - 23MB sentence embedding model, fast & accurate
-- **Chrome Extensions Manifest V3** - service workers, `chrome.bookmarks` API
-- **`chrome.storage.local`** - persistent embedding cache
-- **Cosine similarity** - fast vector search (no external vector DB needed)
-
----
-
-## 🔒 Privacy
-
-- No data ever leaves your browser
-- No external API calls (except CDN for model download on first use)
-- Embeddings stored locally in browser storage
-- Open source - audit it yourself
+| Piece | Role |
+|-------|------|
+| **transformers.js** | In-browser inference (WebAssembly) |
+| **all-MiniLM-L6-v2** | Sentence embedding model (~23 MB) |
+| **Chrome Extensions MV3** | Service worker, `bookmarks`, `storage`, `unlimitedStorage` |
+| **Cosine similarity** | Ranking without an external vector database |
 
 ---
 
-## 📝 Notes
+## Privacy
 
-- Works best with bookmarks that have descriptive titles
-- Re-index after importing a large batch of bookmarks
-- The model handles English best, but works reasonably for other languages
-- Score shown (e.g. `87%`) is cosine similarity - higher = better match
+**Stays on your device**
+
+- Bookmark titles, URLs, and embeddings are processed and stored locally.
+- No analytics, accounts, or third-party search APIs.
+
+**Network (optional / UI only)**
+
+| Request | When | Purpose |
+|---------|------|---------|
+| Hugging Face CDN | First model load (then cached) | Download `Xenova/all-MiniLM-L6-v2` weights |
+| Google Fonts | Popup open | DM Sans / DM Mono typography |
+| Google favicon service | Search results | Site icons in the result list |
+
+Bookmarks themselves are not sent to those services—only the model fetch and the UI resources above. You can audit the code; it’s MIT-licensed open source.
+
+---
+
+## Tips and limits
+
+- Descriptive bookmark titles improve matches; bare URLs still work but are weaker signals.
+- English works best; other languages may be hit-or-miss with this model.
+- Very large libraries take longer to index on first run; the quantized cache keeps storage reasonable (on the order of ~2 MB for thousands of bookmarks).
+- **Firefox** is not supported (Chromium `chrome.*` APIs and MV3 service worker constraints).
+
+---
+
+### Development
+
+Set `DEBUG = true` at the top of `background.js` to expose the in-popup debug log (copy/clear). Leave it `false` for releases.
+
+---
+
+## License
+
+MIT © [Dave Perera](LICENSE) (2026). See [LICENSE](LICENSE) for full terms.
