@@ -1,18 +1,19 @@
-# Findmark
+# <img src="icons/icon48.png" width="32" valign="middle"> Findmark
 
-**Find saved bookmarks by describing them—not by remembering the exact title.**
+**Find saved bookmarks by describing them-not by remembering the exact title.**
 
-If you have hundreds of bookmarks, you have probably been there: you know you saved something, but you cannot recall what it was called or which folder it is in. Findmark lets you search the way you would ask a friend—in your own words.
+![Findmark demo - search bookmarks in plain English](assets/demo.gif)
+
+If you have hundreds of bookmarks, you have probably been there: you know you saved something, but you cannot recall what it was called or which folder it is in. Findmark lets you search the way you would ask a friend-in your own words.
 
 **Try searching like this:**
 
-- *the pasta recipe I saved last year*
-- *that article about getting better sleep*
-- *hotel we looked at for our trip*
-- *birthday gift ideas for mom*
-- *funny cat video someone sent me*
+- _the pasta recipe I saved last year_
+- _that article about getting better sleep_
+- _hotel we looked at for our trip_
+- _birthday gift ideas for mom_
 
-You do not need the right keywords or the website name. Findmark looks for pages that *mean* the same thing as what you typed.
+You do not need the right keywords or the website name. Findmark looks for pages that _mean_ the same thing as what you typed.
 
 **Works in:** Google Chrome, Microsoft Edge, Brave, and other Chromium-based browsers.
 
@@ -22,18 +23,18 @@ You do not need the right keywords or the website name. Findmark looks for pages
 
 ## What you get
 
-- **Search in plain English** — describe the page, not the exact title
-- **Free** — no account, no subscription, no API keys
-- **Stays on your device** — built for local search, not a cloud bookmark service
-- **Remembers your library** — after the first setup, opening Findmark is quick
-- **Keeps up with changes** — new or edited bookmarks are picked up automatically; you can also tap **re-index** if you import a big batch at once
-- **Works offline** — after the first-time setup, search still works without internet
+- **Search in plain English** - describe the page, not the exact title
+- **Free** - no account, no subscription, no API keys
+- **Stays on your device** - built for local search, not a cloud bookmark service
+- **Remembers your library** - after the first setup, opening Findmark is quick
+- **Keeps up with changes** - new or edited bookmarks are picked up automatically; you can also tap **re-index** if you import a big batch at once
+- **Works offline** - after the first-time setup, search still works without internet
 
 ---
 
 ## How to install
 
-1. **Get the extension files** — download this project as a ZIP from GitHub (green **Code** button → **Download ZIP**), then unzip it. You should end up with a folder named `findmark`.
+1. **Get the extension files** - download this project as a ZIP from GitHub (green **Code** button → **Download ZIP**), then unzip it. You should end up with a folder named `findmark`.
 2. **Open extensions in your browser**
    - Chrome or Brave: type `chrome://extensions` in the address bar and press Enter
    - Edge: type `edge://extensions` and press Enter
@@ -47,14 +48,14 @@ You do not need the right keywords or the website name. Findmark looks for pages
 
 ## How to use
 
-| What you want | What to do |
-|---------------|------------|
-| Find a bookmark | Click the Findmark icon, type a short description, and read the list |
-| Open one | Click a result — it opens in a new tab |
-| Start over | Click **✕** next to the search box, or delete what you typed |
+| What you want      | What to do                                                              |
+| ------------------ | ----------------------------------------------------------------------- |
+| Find a bookmark    | Click the Findmark icon, type a short description, and read the list    |
+| Open one           | Click a result - it opens in a new tab                                  |
+| Start over         | Click **✕** next to the search box, or delete what you typed            |
 | Refresh everything | Click **re-index** at the bottom after importing many bookmarks at once |
 
-Each result shows a **match %** — higher means Findmark thinks that bookmark is a better fit for what you described.
+Each result shows a **match %** - higher means Findmark thinks that bookmark is a better fit for what you described.
 
 ---
 
@@ -62,10 +63,10 @@ Each result shows a **match %** — higher means Findmark thinks that bookmark i
 
 ### How it works
 
-1. **Model** — On startup, the background service worker loads `Xenova/all-MiniLM-L6-v2` using a bundled ONNX Runtime WASM build (`lib/ort-wasm-simd.wasm`). Threading is disabled to stay compatible with MV3 service workers.
-2. **Index** — Each bookmark’s title and URL (up to 512 characters) is embedded in batches of 8. Vectors are L2-normalized mean-pooled outputs (384 dimensions).
-3. **Cache** — Embeddings are quantized to int8 and stored under `bookmark_index_v2`. A fingerprint of bookmark id, title, and URL skips rebuilds when nothing changed.
-4. **Search** — Your query is embedded the same way; cosine similarity ranks bookmarks and the top matches are returned to the popup.
+1. **Model** - On startup, the background service worker loads `Xenova/all-MiniLM-L6-v2` using a bundled ONNX Runtime WASM build (`lib/ort-wasm-simd.wasm`). Threading is disabled to stay compatible with MV3 service workers.
+2. **Index** - Each bookmark’s title and URL (up to 512 characters) is embedded in batches of 8. Vectors are L2-normalized mean-pooled outputs (384 dimensions).
+3. **Cache** - Embeddings are quantized to int8 and stored under `bookmark_index_v2`. A fingerprint of bookmark id, title, and URL skips rebuilds when nothing changed.
+4. **Search** - Your query is embedded the same way; cosine similarity ranks bookmarks and the top matches are returned to the popup.
 
 ```
 Popup (popup.html / popup.js)
@@ -96,6 +97,8 @@ findmark/
 │   ├── icon16.png
 │   ├── icon48.png
 │   └── icon128.png
+├── assets/
+│   └── demo.gif           # README demo
 ├── LICENSE                # MIT
 └── README.md
 ```
@@ -104,12 +107,12 @@ findmark/
 
 ### Tech stack
 
-| Piece | Role |
-|-------|------|
-| **transformers.js** | In-browser inference (WebAssembly) |
-| **all-MiniLM-L6-v2** | Sentence embedding model (~23 MB) |
+| Piece                     | Role                                                       |
+| ------------------------- | ---------------------------------------------------------- |
+| **transformers.js**       | In-browser inference (WebAssembly)                         |
+| **all-MiniLM-L6-v2**      | Sentence embedding model (~23 MB)                          |
 | **Chrome Extensions MV3** | Service worker, `bookmarks`, `storage`, `unlimitedStorage` |
-| **Cosine similarity** | Ranking without an external vector database |
+| **Cosine similarity**     | Ranking without an external vector database                |
 
 ---
 
@@ -122,13 +125,13 @@ findmark/
 
 **Network (optional / UI only)**
 
-| Request | When | Purpose |
-|---------|------|---------|
-| Hugging Face CDN | First model load (then cached) | Download `Xenova/all-MiniLM-L6-v2` weights |
-| Google Fonts | Popup open | DM Sans / DM Mono typography |
-| Google favicon service | Search results | Site icons in the result list |
+| Request                | When                           | Purpose                                    |
+| ---------------------- | ------------------------------ | ------------------------------------------ |
+| Hugging Face CDN       | First model load (then cached) | Download `Xenova/all-MiniLM-L6-v2` weights |
+| Google Fonts           | Popup open                     | DM Sans / DM Mono typography               |
+| Google favicon service | Search results                 | Site icons in the result list              |
 
-Bookmarks themselves are not sent to those services—only the model fetch and the UI resources above. You can audit the code; it’s MIT-licensed open source.
+Bookmarks themselves are not sent to those services-only the model fetch and the UI resources above. You can audit the code; it’s MIT-licensed open source.
 
 ---
 
@@ -143,10 +146,4 @@ Bookmarks themselves are not sent to those services—only the model fetch and t
 
 ### Development
 
-Set `DEBUG = true` at the top of `background.js` to expose the in-popup debug log (copy/clear). Leave it `false` for releases.
-
----
-
-## License
-
-MIT © [Dave Perera](LICENSE) (2026). See [LICENSE](LICENSE) for full terms.
+Set `DEBUG = true` at the top of `background.js` to expose the in-popup debug log (copy/clear).
