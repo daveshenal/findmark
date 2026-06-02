@@ -2,7 +2,7 @@
 
 **Find saved bookmarks by describing them-not by remembering the exact title.**
 
-<img src="assets/demo.gif" alt="Findmark demo - search bookmarks in plain English" width="80%">
+![Findmark demo - search bookmarks in plain English](assets/demo.gif)
 
 If you have hundreds of bookmarks, you have probably been there: you know you saved something, but you cannot recall what it was called or which folder it is in. Findmark lets you search the way you would ask a friend-in your own words.
 

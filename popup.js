@@ -1,4 +1,4 @@
-// popup.js — UI logic for Bookmark Semantic Search
+// popup.js - UI logic for Bookmark Semantic Search
 
 const searchInput = document.getElementById("searchInput");
 const clearBtn = document.getElementById("clearBtn");
