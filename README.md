@@ -1,10 +1,10 @@
 # <img src="icons/icon48.png" width="32" valign="middle"> Findmark
 
-**Find saved bookmarks by describing them-not by remembering the exact title.**
+**Find saved bookmarks by describing them - not by remembering the exact title.**
 
-![Findmark demo - search bookmarks in plain English](assets/demo.gif)
+<img src="assets/demo.gif" alt="Findmark demo" width="80%">
 
-If you have hundreds of bookmarks, you have probably been there: you know you saved something, but you cannot recall what it was called or which folder it is in. Findmark lets you search the way you would ask a friend-in your own words.
+If you have hundreds of bookmarks, you have probably been there: you know you saved something, but you cannot recall what it was called or which folder it is in. Findmark lets you search the way you would ask a friend - in your own words.
 
 **Try searching like this:**
 
@@ -34,15 +34,26 @@ You do not need the right keywords or the website name. Findmark looks for pages
 
 ## How to install
 
-1. **Get the extension files** - download this project as a ZIP from GitHub (green **Code** button → **Download ZIP**), then unzip it. You should end up with a folder named `findmark`.
+1. **Get the extension files** - download this project as a ZIP from GitHub (green **Code** button → **Download ZIP**), then unzip it. You should end up with a folder named `findmark-main`; you can rename it to `findmark` if you prefer.
 2. **Open extensions in your browser**
    - Chrome or Brave: type `chrome://extensions` in the address bar and press Enter
    - Edge: type `edge://extensions` and press Enter
 3. Turn on **Developer mode** (usually a switch in the top-right corner).
-4. Click **Load unpacked** and choose the `findmark` folder you unzipped.
+4. Click **Load unpacked** and choose the folder you unzipped.
 5. Pin **Findmark** to your toolbar (puzzle-piece icon → pin) so it is easy to open.
 
-**The first time you open it:** Findmark downloads a small AI helper file (about 23 MB) once, then saves it in your browser. That can take 10–30 seconds depending on your internet. It also reads through your bookmarks once to get ready. A progress bar in the popup shows what is happening. After that, startup is much faster.
+**The first time you open it:** Findmark downloads a 23 MB AI model file once, then saves it in your browser. That can take 10–30 seconds depending on your internet speed. It also reads through your bookmarks once to build the search index. A progress bar in the popup shows what is happening. After that, startup is much faster.
+
+<table>
+  <tr>
+    <td><b>Initial Setup</b></td>
+    <td><b>Search Ready</b></td>
+  </tr>
+  <tr>
+    <td width="400" valign="top"><img src="assets/screenshots/first_start.png" width="100%"></td>
+    <td width="400" valign="top"><img src="assets/screenshots/search.png" width="100%"></td>
+  </tr>
+</table>
 
 ---
 
@@ -64,7 +75,7 @@ Each result shows a **match %** - higher means Findmark thinks that bookmark is 
 ### How it works
 
 1. **Model** - On startup, the background service worker loads `Xenova/all-MiniLM-L6-v2` using a bundled ONNX Runtime WASM build (`lib/ort-wasm-simd.wasm`). Threading is disabled to stay compatible with MV3 service workers.
-2. **Index** - Each bookmark’s title and URL (up to 512 characters) is embedded in batches of 8. Vectors are L2-normalized mean-pooled outputs (384 dimensions).
+2. **Index** - Each bookmark's title and URL (up to 512 characters) is embedded in batches of 8. Vectors are L2-normalized mean-pooled outputs (384 dimensions).
 3. **Cache** - Embeddings are quantized to int8 and stored under `bookmark_index_v2`. A fingerprint of bookmark id, title, and URL skips rebuilds when nothing changed.
 4. **Search** - Your query is embedded the same way; cosine similarity ranks bookmarks and the top matches are returned to the popup.
 
@@ -88,7 +99,6 @@ findmark/
 ├── background.js          # Model load, indexing, search, storage
 ├── popup.html             # Popup UI
 ├── popup.js               # Search UI, status polling, results
-├── style.css              # Popup styles
 ├── lib/
 │   ├── transformers.min.js
 │   ├── ort-wasm.wasm
@@ -114,6 +124,12 @@ findmark/
 | **Chrome Extensions MV3** | Service worker, `bookmarks`, `storage`, `unlimitedStorage` |
 | **Cosine similarity**     | Ranking without an external vector database                |
 
+### Debug Log
+
+Set `DEBUG = true` at the top of `background.js` to expose the in-popup debug log (copy/clear). Set it to `false` before releasing.
+
+<img src="assets/screenshots/debug_logs.png" width="400">
+
 ---
 
 ## Privacy
@@ -131,7 +147,7 @@ findmark/
 | Google Fonts           | Popup open                     | DM Sans / DM Mono typography               |
 | Google favicon service | Search results                 | Site icons in the result list              |
 
-Bookmarks themselves are not sent to those services-only the model fetch and the UI resources above. You can audit the code; it’s MIT-licensed open source.
+Bookmarks themselves are not sent to those services - only the model fetch and the UI resources above. You can audit the code; it's MIT-licensed open source.
 
 ---
 
@@ -139,11 +155,11 @@ Bookmarks themselves are not sent to those services-only the model fetch and the
 
 - Descriptive bookmark titles improve matches; bare URLs still work but are weaker signals.
 - English works best; other languages may be hit-or-miss with this model.
-- Very large libraries take longer to index on first run; the quantized cache keeps storage reasonable (on the order of ~2 MB for thousands of bookmarks).
+- Very large libraries take longer to index on first run; the quantized cache keeps storage reasonable (~2 MB for thousands of bookmarks).
 - **Firefox** is not supported (Chromium `chrome.*` APIs and MV3 service worker constraints).
 
 ---
 
-### Development
+## License
 
-Set `DEBUG = true` at the top of `background.js` to expose the in-popup debug log (copy/clear).
+MIT © [Dave Perera](LICENSE) (2026). See [LICENSE](LICENSE) for full terms.
