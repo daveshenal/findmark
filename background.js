@@ -7,9 +7,18 @@ import { pipeline, env } from './lib/transformers.min.js';
 // Set DEBUG = true to enable the debug panel in the popup.
 const DEBUG = true;
 
-// Don't use local model files — fetch from HuggingFace Hub
+// MV3 service workers don't support URL.createObjectURL or SharedArrayBuffer,
+// so we must disable threading and SIMD-threaded WASM. Instead we point
+// transformers.js at our locally bundled ort-wasm-simd.wasm.
 env.allowLocalModels = false;
 env.useBrowserCache = true;
+
+// Disable all threading — service workers can't spawn Worker threads
+env.backends.onnx.wasm.numThreads = 1;
+
+// Point ONNX runtime at our locally bundled WASM files (no CDN, no Workers)
+const WASM_BASE = chrome.runtime.getURL('lib/');
+env.backends.onnx.wasm.wasmPaths = WASM_BASE;
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -279,4 +288,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Auto-init when service worker starts
 dbg('info', 'Service worker started');
+dbg('info', 'WASM base path:', WASM_BASE);
+dbg('info', 'numThreads:', env.backends.onnx.wasm.numThreads);
 initialize();
