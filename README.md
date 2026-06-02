@@ -1,4 +1,4 @@
-# <img src="icons/icon48.png" width="32" valign="middle"> Findmark
+# <img src="icons/icon48.png" width="32" valign="middle"> Findmark - Bookmark Search
 
 **Find saved bookmarks by describing them - not by remembering the exact title.**
 
@@ -34,7 +34,7 @@ You do not need the right keywords or the website name. Findmark looks for pages
 
 ## How to install
 
-1. **Get the extension files** - download this project as a ZIP from GitHub (green **Code** button → **Download ZIP**), then unzip it. You should end up with a folder named `findmark-main`; you can rename it to `findmark` if you prefer.
+1. **Download the latest release** - go to the [Releases page](../../releases/latest) and download `findmark.zip`, then unzip it.
 2. **Open extensions in your browser**
    - Chrome or Brave: type `chrome://extensions` in the address bar and press Enter
    - Edge: type `edge://extensions` and press Enter
@@ -70,9 +70,7 @@ Each result shows a **match %** - higher means Findmark thinks that bookmark is 
 
 ---
 
-## For developers
-
-### How it works
+## How it works
 
 1. **Model** - On startup, the background service worker loads `Xenova/all-MiniLM-L6-v2` using a bundled ONNX Runtime WASM build (`lib/ort-wasm-simd.wasm`). Threading is disabled to stay compatible with MV3 service workers.
 2. **Index** - Each bookmark's title and URL (up to 512 characters) is embedded in batches of 8. Vectors are L2-normalized mean-pooled outputs (384 dimensions).
@@ -91,7 +89,7 @@ Service worker (background.js)
 
 ---
 
-### Project structure
+## Project structure
 
 ```
 findmark/
@@ -113,7 +111,7 @@ findmark/
 
 ---
 
-### Tech stack
+## Tech stack
 
 | Piece                     | Role                                                       |
 | ------------------------- | ---------------------------------------------------------- |
@@ -122,9 +120,11 @@ findmark/
 | **Chrome Extensions MV3** | Service worker, `bookmarks`, `storage`, `unlimitedStorage` |
 | **Cosine similarity**     | Ranking without an external vector database                |
 
-### Debug Log
+---
 
-Set `DEBUG = true` at the top of `background.js` to expose the in-popup debug log (copy/clear). Set it to `false` before releasing.
+## Debug mode
+
+Set `DEBUG = true` at the top of `background.js` to expose the in-popup debug log (copy/clear).
 
 <img src="assets/screenshots/debug_logs.png" width="400">
 
@@ -151,13 +151,31 @@ Bookmarks themselves are not sent to those services - only the model fetch and t
 
 ## Tips and limits
 
-- Descriptive bookmark titles improve matches; bare URLs still work but are weaker signals.
-- English works best; other languages may be hit-or-miss with this model.
-- Very large libraries take longer to index on first run; the quantized cache keeps storage reasonable (~2 MB for thousands of bookmarks).
-- **Firefox** is not supported (Chromium `chrome.*` APIs and MV3 service worker constraints).
+- Search quality depends on bookmark titles — a title like "Python decorator tutorial" will match better than "Untitled" or a bare URL.
+- English works best; other languages may work but are untested with this model.
+- First-time indexing gets slower with larger libraries, but the cache keeps it fast after that. Storage stays reasonable (~2 MB for thousands of bookmarks).
+- **Firefox is not supported** — Findmark uses Chromium-only APIs (`chrome.*`) and MV3 service worker features.
+
+---
+
+## What’s next
+
+Have an idea or found a bug? [Open an issue](../../issues) - feedback is welcome.
+
+Things being considered for future versions:
+
+- [ ] Page content indexing - embed actual page text for richer, more accurate search
+- [ ] Keyboard shortcut to open Findmark from any tab
+- [ ] Firefox support
 
 ---
 
 ## License
 
 MIT © [Dave Perera](LICENSE) (2026). See [LICENSE](LICENSE) for full terms.
+
+---
+
+<p align="center">
+If Findmark is useful or you like the idea, consider leaving a ⭐ to help more people find it.
+</p>
