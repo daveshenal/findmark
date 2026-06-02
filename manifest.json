@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Bookmark Semantic Search",
-  "version": "1.0.0",
-  "description": "Find any bookmark by describing it in plain English — powered by local AI.",
+  "name": "Findmark",
+  "version": "1.0.1",
+  "description": "Find any bookmark by describing it in plain English - powered by local AI.",
   "permissions": [
     "bookmarks",
     "storage",

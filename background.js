@@ -50,7 +50,7 @@ function dbg(level, ...args) {
   debugLog.push(entry);
   if (debugLog.length > 200) debugLog.shift();
   console[level === "error" ? "error" : level === "warn" ? "warn" : "log"](
-    `[BookmarkSearch ${entry.ts}]`,
+    `[Findmark ${entry.ts}]`,
     ...args,
   );
 }
