@@ -5,7 +5,7 @@ import { pipeline, env } from "./lib/transformers.min.js";
 
 // ── Dev config ────────────────────────────────────────────────────────────────
 // Set DEBUG = true to enable the debug panel in the popup.
-const DEBUG = true;
+const DEBUG = false;
 
 // MV3 service workers don't support URL.createObjectURL or SharedArrayBuffer,
 // so we must disable threading and SIMD-threaded WASM. Instead we point
