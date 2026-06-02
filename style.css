@@ -7,17 +7,17 @@
 }
 
 :root {
-  --bg: #0c0c0f;
-  --surface: #141418;
-  --surface2: #1c1c22;
-  --border: #2a2a35;
-  --accent: #7b6ef6;
-  --accent2: #a78bfa;
-  --text: #e8e8f0;
-  --muted: #6b6b80;
-  --green: #4ade80;
-  --red: #f87171;
-  --yellow: #fbbf24;
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #21262d;
+  --border: #30363d;
+  --accent: #58a6ff;
+  --accent2: #79c0ff;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --green: #3fb950;
+  --red: #f85149;
+  --yellow: #d29922;
 }
 
 body {
@@ -55,7 +55,7 @@ body {
 }
 
 .title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
