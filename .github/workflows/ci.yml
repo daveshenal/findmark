@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "assets/**"
+      - "LICENSE"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate manifest.json
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))" \
+            && echo "✓ manifest.json is valid JSON"
+
+      - name: Check manifest_version is 3
+        run: |
+          node -e "
+            const m = JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'));
+            if (m.manifest_version !== 3) {
+              console.error('✗ manifest_version is not 3');
+              process.exit(1);
+            }
+            console.log('✓ manifest_version is 3');
+          "
+
+      - name: Check required files exist
+        run: |
+          required_files=(
+            "background.js"
+            "popup.html"
+            "popup.js"
+            "style.css"
+            "manifest.json"
+            "lib/transformers.min.js"
+            "lib/ort-wasm.wasm"
+            "lib/ort-wasm-simd.wasm"
+            "icons/icon16.png"
+            "icons/icon48.png"
+            "icons/icon128.png"
+          )
+          missing=0
+          for f in "${required_files[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "✗ Missing required file: $f"
+              missing=1
+            fi
+          done
+          if [ "$missing" -eq 1 ]; then
+            exit 1
+          fi
+          echo "✓ All required files present"
+
+      - name: Check JS files for syntax errors
+        run: |
+          for f in background.js popup.js; do
+            node --check "$f" && echo "✓ $f has valid syntax"
+          done
+
+      - name: Verify manifest references match filesystem
+        run: |
+          node -e "
+            const fs = require('fs');
+            const m = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+            const checks = [
+              m.background?.service_worker,
+              m.action?.default_popup,
+              ...Object.values(m.icons || {}),
+              ...Object.values(m.action?.default_icon || {}),
+            ].filter(Boolean);
+            let ok = true;
+            for (const path of checks) {
+              if (!fs.existsSync(path)) {
+                console.error('✗ manifest references missing file: ' + path);
+                ok = false;
+              }
+            }
+            if (!ok) process.exit(1);
+            console.log('✓ All manifest-referenced files exist');
+          "
