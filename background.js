@@ -145,6 +145,49 @@ async function embed(text) {
 
 // ── Main init flow ────────────────────────────────────────────────────────────
 
+// Lazily loads the embedding pipeline — only called when we actually need to
+// embed something (stale/missing cache, forced reindex, or first search call).
+// Safe to call multiple times: no-ops if embedder is already loaded.
+async function ensureEmbedder() {
+  if (embedder) return;
+  dbg("info", "Loading pipeline: Xenova/all-MiniLM-L6-v2");
+  dbg(
+    "info",
+    "env.allowLocalModels =",
+    env.allowLocalModels,
+    "| env.useBrowserCache =",
+    env.useBrowserCache,
+  );
+  embedder = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2", {
+    progress_callback: (p) => {
+      dbg(
+        "info",
+        `Model progress: status=${p.status} file=${p.file || ""} loaded=${p.loaded || 0} total=${p.total || 0}`,
+      );
+      if (
+        p.status === "downloading" ||
+        p.status === "loading" ||
+        p.status === "progress"
+      ) {
+        progress = Math.min(
+          60,
+          Math.round(((p.loaded || 0) / (p.total || 1)) * 60),
+        );
+      }
+      if (p.status === "done") {
+        progress = 62;
+        dbg("info", "File done:", p.file);
+      }
+      if (p.status === "ready") {
+        progress = 65;
+        dbg("info", "Pipeline ready");
+      }
+    },
+  });
+  dbg("info", "Pipeline loaded successfully");
+  progress = 65;
+}
+
 async function initialize(forceReindex = false) {
   if (state === "loading" || state === "indexing") {
     dbg("info", "initialize() called but already in state:", state);
@@ -155,47 +198,11 @@ async function initialize(forceReindex = false) {
     state = "loading";
     progress = 5;
     dbg("info", "Starting initialization. forceReindex =", forceReindex);
-    dbg(
-      "info",
-      "env.allowLocalModels =",
-      env.allowLocalModels,
-      "| env.useBrowserCache =",
-      env.useBrowserCache,
-    );
 
-    // Load the embedding model
-    dbg("info", "Loading pipeline: Xenova/all-MiniLM-L6-v2");
-    embedder = await pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2", {
-      progress_callback: (p) => {
-        dbg(
-          "info",
-          `Model progress: status=${p.status} file=${p.file || ""} loaded=${p.loaded || 0} total=${p.total || 0}`,
-        );
-        if (
-          p.status === "downloading" ||
-          p.status === "loading" ||
-          p.status === "progress"
-        ) {
-          progress = Math.min(
-            60,
-            Math.round(((p.loaded || 0) / (p.total || 1)) * 60),
-          );
-        }
-        if (p.status === "done") {
-          progress = 62;
-          dbg("info", "File done:", p.file);
-        }
-        if (p.status === "ready") {
-          progress = 65;
-          dbg("info", "Pipeline ready");
-        }
-      },
-    });
-
-    dbg("info", "Pipeline loaded successfully");
-    progress = 65;
-
-    // Try loading cached index unless forced reindex
+    // Check the cache BEFORE loading the model — the fingerprint check is just
+    // storage reads + string comparisons and doesn't need the embedder at all.
+    // On a cache-hit cold start the popup reaches "ready" instantly, with the
+    // model only loaded lazily when the user actually fires a search.
     if (!forceReindex) {
       dbg("info", "Checking for cached index...");
       const cached = await loadIndex();
@@ -210,12 +217,12 @@ async function initialize(forceReindex = false) {
             .sort()
             .join("|");
         if (fingerprint(current) === fingerprint(cached)) {
-          dbg("info", "Cache is fresh - skipping reindex");
+          dbg("info", "Cache is fresh - skipping reindex, embedder deferred");
           indexedBookmarks = cached;
           bookmarkCount = cached.length;
           state = "ready";
           progress = 100;
-          return;
+          return; // embedder stays null until first search()
         } else {
           dbg("info", "Cache is stale - reindexing");
         }
@@ -224,6 +231,8 @@ async function initialize(forceReindex = false) {
       }
     }
 
+    // Cache miss or forced reindex — now we actually need the model.
+    await ensureEmbedder();
     await buildIndex();
   } catch (err) {
     state = "error";
@@ -272,7 +281,10 @@ async function buildIndex() {
 // ── Search ────────────────────────────────────────────────────────────────────
 
 async function search(query, topK = 8) {
-  if (state !== "ready" || !embedder) throw new Error("Not ready");
+  if (state !== "ready") throw new Error("Not ready");
+  // Lazily load the embedder on first search after a cache-hit cold start.
+  // ensureEmbedder() is a no-op if the model is already loaded.
+  await ensureEmbedder();
   dbg("info", `Searching: "${query}"`);
   const queryEmbedding = await embed(query);
   const scored = indexedBookmarks.map((bm) => ({
