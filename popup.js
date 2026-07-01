@@ -118,12 +118,17 @@ document.getElementById("debugClear").addEventListener("click", () => {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 async function init() {
-  setStatus("loading", "loading model");
-  showState(
-    "📦",
-    "Loading AI model…",
-    "This only happens once. Future searches are instant.",
-  );
+  // Don't eagerly show the loading screen — wait to hear from the background
+  // first. If it responds "ready" within 150ms (cache-hit cold start or warm
+  // worker), the user never sees the flash. Only show it if we know we have to.
+  let loadingTimer = setTimeout(() => {
+    setStatus("loading", "loading model");
+    showState(
+      "📦",
+      "Loading AI model…",
+      "This only happens once. Future searches are instant.",
+    );
+  }, 150);
 
   // Check if debug is enabled in background
   chrome.runtime.sendMessage({ type: "GET_DEBUG" }, (response) => {
@@ -139,6 +144,7 @@ async function init() {
   });
 
   chrome.runtime.sendMessage({ type: "INIT" }, (response) => {
+    clearTimeout(loadingTimer); // cancel the flash if we're already ready
     if (chrome.runtime.lastError) {
       setStatus("error", "error");
       showState("❌", "Something went wrong", chrome.runtime.lastError.message);
@@ -147,6 +153,13 @@ async function init() {
     if (response?.status === "ready") {
       onReady(response.count);
     } else {
+      // We know we genuinely have to wait — show loading state now
+      setStatus("loading", "loading model");
+      showState(
+        "📦",
+        "Loading AI model…",
+        "This only happens once. Future searches are instant.",
+      );
       pollReady();
     }
   });
